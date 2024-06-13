@@ -20,7 +20,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 LIGHT_BLUE = (173, 216, 230)  # цвет выделения
 BLACK = (0, 0, 0)
-
+BLUE = (0, 0, 255)
 # шрифт
 pygame.font.init()
 font = pygame.font.SysFont('Arial', 24)
