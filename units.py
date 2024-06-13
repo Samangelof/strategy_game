@@ -30,6 +30,7 @@ class Unit(pygame.sprite.Sprite):
         self.target_pos = None
         self.name = name
         self.hp = 100
+        self.max_hp = 100
         self.battle_spirit = battle_spirit
         self.attack_cooldown = 0
         self.animation_counter = 0
@@ -39,6 +40,11 @@ class Unit(pygame.sprite.Sprite):
         self.running_speed = 2.4
         self.is_running = False
         self.is_walking = False
+        self.collision_resolved = False 
+        self.hp_bar_length = 50  # Длина полоски здоровья
+        self.hp_bar_height = 5   # Высота полоски здоровья
+        self.hp_bar_color = (0, 255, 0)       # Цвет полоски здоровья
+        self.hp_bar_bg_color = (255, 0, 0)  # Цвет фона полоски здоровья
 
     def update(self):
         self.animate()
@@ -70,6 +76,7 @@ class Unit(pygame.sprite.Sprite):
             target_x, target_y = self.target_pos
             dx, dy = target_x - self.rect.centerx, target_y - self.rect.centery
             distance = (dx**2 + dy**2) ** 0.5
+            
             if distance < 5:
                 self.target_pos = None
                 self.is_walking = False
@@ -103,20 +110,27 @@ class Unit(pygame.sprite.Sprite):
 
     def attack(self, other_unit):
         if self.attack_cooldown <= 0:
-            other_unit.hp -= 10
-            self.attack_cooldown = 30
+            other_unit.hp -= 10  # наносим 10 единиц урона
+            self.attack_cooldown = 30  # время до следующей атаки
 
     def check_combat(self, all_units):
         for unit in all_units:
             if unit is not self and self.rect.colliderect(unit.rect):
                 self.attack(unit)
-    
+
+
     def draw(self):
         if self.selected:
             pygame.draw.rect(screen, self.selected_color, self.rect, 3)
+        
+        # Рисуем полоску здоровья
+        hp_bar_width = int(self.hp / self.max_hp * self.hp_bar_length)
+        pygame.draw.rect(screen, self.hp_bar_bg_color, (self.rect.centerx - self.hp_bar_length // 2, self.rect.y - 10, self.hp_bar_length, self.hp_bar_height))
+        pygame.draw.rect(screen, self.hp_bar_color, (self.rect.centerx - self.hp_bar_length // 2, self.rect.y - 10, hp_bar_width, self.hp_bar_height))
+
         screen.blit(self.image, self.rect)
 
-
+    
 class Hero(Unit):
     def __init__(self, x, y, name, level, image_size=(43, 64)):
         super().__init__(x, y, name, HERO_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, HERO_RUN_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
@@ -143,33 +157,38 @@ class Hero(Unit):
 
 class Warrior(Unit):
     def __init__(self, x, y, name, level, image_size=(43, 64)):
-        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
+        super().__init__(x, y, name, HERO_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, HERO_RUN_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
         self.level = level
-        self.run_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_RUN_LEFT_IMAGES]
-        self.run_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_RUN_RIGHT_IMAGES]
-        self.idle_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_IDLE_LEFT_IMAGES]
-        self.idle_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_IDLE_RIGHT_IMAGES]
+        self.walk_images_right = [pygame.transform.scale(image, image_size) for image in HERO_WALK_RIGHT_IMAGES]
+        self.walk_images_left = [pygame.transform.scale(image, image_size) for image in HERO_WALK_LEFT_IMAGES]
+        self.run_images_left = [pygame.transform.scale(image, image_size) for image in HERO_RUN_LEFT_IMAGES]
+        self.run_images_right = [pygame.transform.scale(image, image_size) for image in HERO_RUN_RIGHT_IMAGES]
+        self.idle_images_left = [pygame.transform.scale(image, image_size) for image in HERO_IDLE_LEFT_IMAGES]
+        self.idle_images_right = [pygame.transform.scale(image, image_size) for image in HERO_IDLE_RIGHT_IMAGES]
         self.is_running = False
 
     def update(self):
-        if self.target_pos:
+        # Устанавливаем соответствующие изображения в зависимости от состояния и направления
+        if self.is_running:
             self.images = self.run_images_left if self.direction == 'left' else self.run_images_right
+        elif self.target_pos:
+            self.images = self.walk_images_left if self.direction == 'left' else self.walk_images_right
         else:
             self.images = self.idle_images_left if self.direction == 'left' else self.idle_images_right
-
+            
         super().update()
 
 
 class Enemy(Unit):
     def __init__(self, x, y, name, level, image_size=(43, 64)):
-        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
+        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, image_size)  
         self.level = level
         self.run_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_RUN_LEFT_IMAGES]
         self.run_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_RUN_RIGHT_IMAGES]
         self.idle_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_IDLE_LEFT_IMAGES]
         self.idle_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_IDLE_RIGHT_IMAGES]
         self.is_running = False
+        self.attack_cooldown = 0  # Устанавливаем начальное значение времени отката атаки
 
     def update(self):
-        pass
-    
+        super().update()

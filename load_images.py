@@ -31,5 +31,5 @@ KNIGHT_RUN_LEFT_IMAGES = [
     pygame.image.load(f'assets/Knight_1/Run/Run_left_{i}.png') for i in range(1, 7)
 ]
 
-# WARRIOR_IMAGE = pygame.image.load('images/soldier.png')
+WARRIOR_IMAGE = pygame.image.load('images/soldier.png')
 ENEMY_IMAGE = pygame.image.load('images/enemy_soldier.png')

@@ -17,9 +17,7 @@ from utils import ClickTimer
 
 pygame.init()
 
-
 click_timer = ClickTimer()
-
 
 all_sprites = pygame.sprite.Group()
 player_units = pygame.sprite.Group()
@@ -30,14 +28,13 @@ squad1 = Warrior(200, screen_height - 200, "Рыцарь 1", 1)
 squad2 = Warrior(300, screen_height - 100, "Рыцарь 2", 2)
 
 player_units.add(hero, squad1, squad2)
-all_sprites.add(player_units)
+all_sprites.add(hero, squad1, squad2)
 
 enemy_hero = Enemy(screen_width - 100, 100, "Главарь банды", 3)
 enemy_squad = Enemy(screen_width - 200, 200, "Головорез 1", 1)
 
 enemy_units.add(enemy_hero, enemy_squad)
-all_sprites.add(enemy_units)
-
+all_sprites.add(enemy_hero, enemy_squad)
 
 selecting = False
 start_pos = None
@@ -77,8 +74,12 @@ while running:
             if selecting:
                 end_pos = event.pos
 
+    # Обновление всех спрайтов
     all_sprites.update()
+    player_units.update()
+    enemy_units.update()
 
+    # Обработка коллизий и боя
     for unit in player_units:
         unit.handle_collisions(player_units)
         unit.check_combat(enemy_units)
@@ -86,6 +87,7 @@ while running:
         unit.handle_collisions(enemy_units)
         unit.check_combat(player_units)
 
+    # Удаление юнитов с нулевым здоровьем
     for unit in player_units.copy():
         if unit.hp <= 0:
             unit.kill()
@@ -93,6 +95,7 @@ while running:
         if unit.hp <= 0:
             unit.kill()
 
+    # Отрисовка на экране
     screen.fill(WHITE)
     all_sprites.draw(screen)
 
