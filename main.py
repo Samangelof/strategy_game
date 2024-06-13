@@ -14,6 +14,8 @@ from units import (
     Enemy
 )
 from utils import ClickTimer
+from objects import static_objects
+
 
 pygame.init()
 
@@ -35,6 +37,11 @@ enemy_squad = Enemy(screen_width - 200, 200, "Головорез 1", 1)
 
 enemy_units.add(enemy_hero, enemy_squad)
 all_sprites.add(enemy_hero, enemy_squad)
+
+
+# Загружаем изображения объектов
+all_sprites.add(static_objects)
+
 
 selecting = False
 start_pos = None
@@ -81,19 +88,22 @@ while running:
 
     # Обработка коллизий и боя
     for unit in player_units:
-        unit.handle_collisions(player_units)
+        unit.update()
+        unit.handle_collisions(player_units, static_objects)
         unit.check_combat(enemy_units)
+
     for unit in enemy_units:
-        unit.handle_collisions(enemy_units)
+        unit.update()
+        unit.handle_collisions(enemy_units, static_objects)
         unit.check_combat(player_units)
 
     # Удаление юнитов с нулевым здоровьем
     for unit in player_units.copy():
         if unit.hp <= 0:
-            unit.kill()
+            unit.update()  # Обновляем юнитА для анимации смерти
     for unit in enemy_units.copy():
         if unit.hp <= 0:
-            unit.kill()
+            unit.update()  
 
     # Отрисовка на экране
     screen.fill(WHITE)
