@@ -42,6 +42,7 @@ def resolve_collision(unit, other):
 
 def attack(unit, other_unit):
     if unit.attack_cooldown <= 0:
+        unit.is_attacking = True
         other_unit.hp -= 10  # 10 единиц урона
         unit.attack_cooldown = 30  # время до следующей атаки
 

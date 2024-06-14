@@ -1,7 +1,6 @@
 import pygame
 import random
 from load_images import (
-    BUILDING_IMAGE,
     TREE_IMAGE,
     ROCK_IMAGE
 )
@@ -23,7 +22,7 @@ def create_static_objects(object_images, predefined_coords, image_size=(64, 64))
     return objects_group
 
 
-object_images = [BUILDING_IMAGE, TREE_IMAGE, ROCK_IMAGE]
+object_images = [TREE_IMAGE, ROCK_IMAGE]
 predefined_coords = [
     (150, 150), 
     (200, 200), 

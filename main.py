@@ -13,6 +13,7 @@ from units import (
     Warrior,
     Enemy
 )
+from load_images import LANDSCAPE
 from utils import ClickTimer
 from objects import static_objects
 
@@ -100,13 +101,13 @@ while running:
     # Удаление юнитов с нулевым здоровьем
     for unit in player_units.copy():
         if unit.hp <= 0:
-            unit.update()  # Обновляем юнитА для анимации смерти
+            unit.update()  # Обновляем юнита для анимации смерти
     for unit in enemy_units.copy():
         if unit.hp <= 0:
             unit.update()  
 
     # Отрисовка на экране
-    screen.fill(WHITE)
+    screen.blit(LANDSCAPE, (0, 0))
     all_sprites.draw(screen)
 
     for unit in player_units:

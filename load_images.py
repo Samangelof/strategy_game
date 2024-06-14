@@ -52,6 +52,8 @@ KNIGHT_DEAD_LEFT_IMAGES = [pygame.image.load(f'assets/Knight_1/Dead/Dead_left_{i
 WARRIOR_IMAGE = pygame.image.load('images/soldier.png')
 ENEMY_IMAGE = pygame.image.load('images/enemy_soldier.png')
 
-BUILDING_IMAGE = pygame.image.load('assets/tree_1.png')
+# BUILDING_IMAGE = pygame.image.load('assets/tree_1.png')
 TREE_IMAGE = pygame.image.load('assets/tree_1.png')
-ROCK_IMAGE = pygame.image.load('assets/tree_3.png')
+ROCK_IMAGE = pygame.image.load('assets/rock_1.png')
+
+LANDSCAPE = pygame.image.load("assets/landscape.png").convert()

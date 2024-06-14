@@ -8,6 +8,8 @@ from load_images import (
     HERO_WALK_LEFT_IMAGES,
     HERO_DEAD_RIGHT_IMAGES,
     HERO_DEAD_LEFT_IMAGES,
+    HERO_ATTACK_RIGHT_IMAGES,
+    HERO_ATTACK_LEFT_IMAGES,
     ENEMY_IMAGE,
     KNIGHT_IDLE_RIGHT_IMAGES,
     KNIGHT_IDLE_LEFT_IMAGES,
@@ -16,7 +18,9 @@ from load_images import (
     KNIGHT_WALK_RIGHT_IMAGES,
     KNIGHT_WALK_LEFT_IMAGES,
     KNIGHT_DEAD_RIGHT_IMAGES,
-    KNIGHT_DEAD_LEFT_IMAGES
+    KNIGHT_DEAD_LEFT_IMAGES,
+    KNIGHT_ATTACK_RIGHT_IMAGES,
+    KNIGHT_ATTACK_LEFT_IMAGES
     
 )
 from combat import (
@@ -29,11 +33,12 @@ from config import screen, BLUE
 
 
 class Unit(pygame.sprite.Sprite):
-    def __init__(self, x, y, name, idle_images, walk_images, run_images, image_size, battle_spirit=50):
+    def __init__(self, x, y, name, idle_images, walk_images, run_images, attack_images, image_size, battle_spirit=50):
         super().__init__()
         self.idle_images = [pygame.transform.scale(image, image_size) for image in idle_images]
         self.walk_images = [pygame.transform.scale(image, image_size) for image in walk_images]
         self.run_images = [pygame.transform.scale(image, image_size) for image in run_images]
+        self.attack_images = [pygame.transform.scale(image, image_size) for image in attack_images]
         self.images = self.idle_images
         self.image_index = 0
         self.image = self.images[self.image_index]
@@ -53,6 +58,7 @@ class Unit(pygame.sprite.Sprite):
         self.running_speed = 1.2
         self.is_running = False
         self.is_walking = False
+        self.is_attacking = False
         self.collision_resolved = False 
         self.hp_bar_length = 50  # Длина полоски здоровья
         self.hp_bar_height = 5   # Высота полоски здоровья
@@ -66,6 +72,10 @@ class Unit(pygame.sprite.Sprite):
             self.dead_animation()
             return
         
+        if self.is_attacking:
+            self.attack_animation()
+            return
+
         self.animate()
         if self.target_pos:
             self.move_towards_target()
@@ -80,6 +90,16 @@ class Unit(pygame.sprite.Sprite):
         
         self.images = self.dead_images
         self.image_index = self.dead_animation_counter // self.dead_animation_speed
+        self.image = self.images[min(self.image_index, len(self.images) - 1)]
+
+    def attack_animation(self):
+        self.animation_counter += 1
+        if self.animation_counter >= len(self.attack_images) * self.dead_animation_speed:
+            self.is_attacking = False
+            return
+        
+        self.images = self.attack_images
+        self.image_index = self.animation_counter // self.dead_animation_speed
         self.image = self.images[min(self.image_index, len(self.images) - 1)]
 
     def handle_collisions(self, all_units, static_objects):
@@ -143,7 +163,7 @@ class Unit(pygame.sprite.Sprite):
     
 class Hero(Unit):
     def __init__(self, x, y, name, level, image_size=(43, 64)):
-        super().__init__(x, y, name, HERO_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, HERO_RUN_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
+        super().__init__(x, y, name, HERO_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, HERO_RUN_RIGHT_IMAGES, HERO_ATTACK_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
         self.level = level
         self.walk_images_right = [pygame.transform.scale(image, image_size) for image in HERO_WALK_RIGHT_IMAGES]
         self.walk_images_left = [pygame.transform.scale(image, image_size) for image in HERO_WALK_LEFT_IMAGES]
@@ -153,6 +173,8 @@ class Hero(Unit):
         self.idle_images_right = [pygame.transform.scale(image, image_size) for image in HERO_IDLE_RIGHT_IMAGES]
         self.dead_images_left = [pygame.transform.scale(image, image_size) for image in HERO_DEAD_LEFT_IMAGES]
         self.dead_images_right = [pygame.transform.scale(image, image_size) for image in HERO_DEAD_RIGHT_IMAGES]
+        self.attack_images_left = [pygame.transform.scale(image, image_size) for image in HERO_ATTACK_LEFT_IMAGES]
+        self.attack_images_right = [pygame.transform.scale(image, image_size) for image in HERO_ATTACK_RIGHT_IMAGES]
 
     def update(self):
         if self.hp <= 0:
@@ -163,6 +185,8 @@ class Hero(Unit):
             self.images = self.run_images_left if self.direction == 'left' else self.run_images_right
         elif self.target_pos:
             self.images = self.walk_images_left if self.direction == 'left' else self.walk_images_right
+        elif self.is_attacking:
+            self.images = self.attack_images_left if self.direction == 'left' else self.attack_images_right
         else:
             self.images = self.idle_images_left if self.direction == 'left' else self.idle_images_right
             
@@ -177,11 +201,21 @@ class Hero(Unit):
         self.images = self.dead_images_left if self.direction == 'left' else self.dead_images_right
         self.image_index = self.dead_animation_counter // self.dead_animation_speed
         self.image = self.images[min(self.image_index, len(self.images) - 1)]
+    
+    def dead_animation(self):
+        self.dead_animation_counter += 1
+        if self.dead_animation_counter >= len(self.dead_images_left) * self.dead_animation_speed:
+            self.kill()
+            return
+        
+        self.images = self.dead_images_left if self.direction == 'left' else self.dead_images_right
+        self.image_index = self.dead_animation_counter // self.dead_animation_speed
+        self.image = self.images[min(self.image_index, len(self.images) - 1)]
 
 
 class Warrior(Unit):
     def __init__(self, x, y, name, level, image_size=(43, 64)):
-        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, KNIGHT_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
+        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, KNIGHT_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, KNIGHT_ATTACK_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
         self.level = level
         self.walk_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_WALK_RIGHT_IMAGES]
         self.walk_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_WALK_LEFT_IMAGES]
@@ -191,6 +225,8 @@ class Warrior(Unit):
         self.idle_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_IDLE_RIGHT_IMAGES]
         self.dead_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_DEAD_LEFT_IMAGES]
         self.dead_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_DEAD_RIGHT_IMAGES]
+        self.attack_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_ATTACK_LEFT_IMAGES]
+        self.attack_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_ATTACK_RIGHT_IMAGES]
 
     def update(self):
         if self.hp <= 0:
@@ -201,6 +237,8 @@ class Warrior(Unit):
             self.images = self.run_images_left if self.direction == 'left' else self.run_images_right
         elif self.target_pos:
             self.images = self.walk_images_left if self.direction == 'left' else self.walk_images_right
+        elif self.is_attacking:
+            self.images = self.attack_images_left if self.direction == 'left' else self.attack_images_right
         else:
             self.images = self.idle_images_left if self.direction == 'left' else self.idle_images_right
             
@@ -219,7 +257,7 @@ class Warrior(Unit):
 
 class Enemy(Unit):
     def __init__(self, x, y, name, level, image_size=(43, 64)):
-        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, KNIGHT_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, image_size)  
+        super().__init__(x, y, name, KNIGHT_IDLE_RIGHT_IMAGES, KNIGHT_WALK_RIGHT_IMAGES, KNIGHT_RUN_RIGHT_IMAGES, KNIGHT_ATTACK_RIGHT_IMAGES, image_size)  
         self.level = level
         self.run_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_RUN_LEFT_IMAGES]
         self.run_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_RUN_RIGHT_IMAGES]
@@ -227,6 +265,8 @@ class Enemy(Unit):
         self.idle_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_IDLE_RIGHT_IMAGES]
         self.dead_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_DEAD_LEFT_IMAGES]
         self.dead_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_DEAD_RIGHT_IMAGES]
+        self.attack_images_left = [pygame.transform.scale(image, image_size) for image in KNIGHT_ATTACK_LEFT_IMAGES]
+        self.attack_images_right = [pygame.transform.scale(image, image_size) for image in KNIGHT_ATTACK_RIGHT_IMAGES]
         self.is_running = False
         self.attack_cooldown = 0
 
