@@ -162,9 +162,13 @@ class Unit(pygame.sprite.Sprite):
 
     
 class Hero(Unit):
-    def __init__(self, x, y, name, level, image_size=(43, 64)):
+    def __init__(self, x, y, name, level, image_size=(93, 84)):
         super().__init__(x, y, name, HERO_IDLE_RIGHT_IMAGES, HERO_WALK_RIGHT_IMAGES, HERO_RUN_RIGHT_IMAGES, HERO_ATTACK_RIGHT_IMAGES, image_size)  # анимация стояния вправо по умолчанию
         self.level = level
+        self.max_hp = 220
+        self.hp = 220
+        self.walking_speed = 1.6
+        self.running_speed = 1.6
         self.walk_images_right = [pygame.transform.scale(image, image_size) for image in HERO_WALK_RIGHT_IMAGES]
         self.walk_images_left = [pygame.transform.scale(image, image_size) for image in HERO_WALK_LEFT_IMAGES]
         self.run_images_left = [pygame.transform.scale(image, image_size) for image in HERO_RUN_LEFT_IMAGES]
